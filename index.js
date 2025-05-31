@@ -6,23 +6,28 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ Abilita CORS SOLO per Netlify
+// ✅ CORS completo: solo Netlify, gestisce anche preflight
 app.use(cors({
-  origin: 'https://sportivanet.netlify.app'
+  origin: 'https://sportivanet.netlify.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-token'],
+  credentials: true
 }));
 
+// ✅ Gestione preflight automatica
+app.options('*', cors());
 
 // Usa qui i tuoi dati Supabase
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnJtbnRtc2NobXFybWh2b3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDM4OTcsImV4cCI6MjA2MzkxOTg5N30.DOpPC7YZOIbgEXktSvH6Sxg_Zfw_x7-5TNdO680qZ-o';
+const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const API_TOKEN = 'supersegreto123';
 
-app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
 
 app.post('/api/proxy', async (req, res) => {
   const { azione } = req.body;
