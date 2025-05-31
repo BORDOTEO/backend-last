@@ -14,6 +14,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'x-api-token']
 }));
 
+// ✅ Gestione completa della richiesta preflight OPTIONS
+app.options('*', cors({
+  origin: 'https://sportivanet2.netlify.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-token']
+}));
+
 // ✅ Middleware per OPTIONS esplicito per sicurezza
 app.options('/api/proxy', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://sportivanet2.netlify.app');
