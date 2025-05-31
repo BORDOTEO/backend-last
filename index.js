@@ -151,6 +151,11 @@ app.post('/api/proxy', async (req, res) => {
   }
 });
 
+// ✅ Route di test per Render
+app.get("/", (req, res) => {
+  res.send("Backend attivo ✅");
+});
+
 // ✅ Avvio server compatibile con Render
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server avviato sulla porta ${PORT}`);
