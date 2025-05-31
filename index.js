@@ -27,6 +27,15 @@ const API_TOKEN = 'supersegreto123';
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.options('/api/proxy', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': 'https://sportivanet2.netlify.app',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, x-api-token'
+  });
+  res.sendStatus(204);
+});
+
 
 app.post('/api/proxy', async (req, res) => {
   const { azione } = req.body;
