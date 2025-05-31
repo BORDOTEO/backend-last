@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3001;
 
 // ✅ CORS completo: solo Netlify, gestisce anche preflight
 app.use(cors({
-  origin: 'https://sportivanet.netlify.app',
+  origin: 'https://sportivanet2.netlify.app',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-api-token'],
   credentials: true
