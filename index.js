@@ -7,6 +7,14 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ✅ Header manuali per CORS (tutte le richieste)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://sportivanet2.netlify.app");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, x-api-token");
+  next();
+});
+
 // ✅ CORS configurato correttamente per Netlify
 app.use(cors({
   origin: 'https://sportivanet2.netlify.app',
