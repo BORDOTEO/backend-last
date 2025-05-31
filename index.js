@@ -1,32 +1,36 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ Middleware CORS universale (funziona su Render per Netlify)
-app.use((req, res, next) => {
+// ✅ CORS configurato correttamente per Netlify
+app.use(cors({
+  origin: 'https://sportivanet2.netlify.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-token']
+}));
+
+// ✅ Middleware per OPTIONS esplicito per sicurezza
+app.options('/api/proxy', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://sportivanet2.netlify.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-token');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
+  return res.sendStatus(204);
 });
 
-// Supabase setup
+// Supabase config
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnJtbnRtc2NobXFybWh2b3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDM4OTcsImV4cCI6MjA2MzkxOTg5N30.DOpPC7YZOIbgEXktSvH6Sxg_Zfw_x7-5TNdO680qZ-o';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API_TOKEN = 'supersegreto123';
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// ✅ Route principale
 app.post('/api/proxy', async (req, res) => {
   const { azione } = req.body;
   const token = req.headers['x-api-token'];
@@ -36,7 +40,7 @@ app.post('/api/proxy', async (req, res) => {
   }
 
   try {
-    // Get Gettone
+    // ✅ Recupera il gettone
     if (azione === 'getGettone') {
       const { data, error } = await supabase
         .from('strutture')
@@ -48,7 +52,7 @@ app.post('/api/proxy', async (req, res) => {
       return res.json({ gettone: data.gettone });
     }
 
-    // Mostra Tabella Ingressi
+    // ✅ Mostra tabella ingressi
     if (azione === 'mostraTabella') {
       const strutturaId = req.body.struttura_id;
       if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
@@ -72,7 +76,7 @@ app.post('/api/proxy', async (req, res) => {
       return res.json([intestazione, ...righe]);
     }
 
-    // Mostra Prenotazioni
+    // ✅ Mostra prenotazioni
     if (azione === 'mostraPrenotazioni') {
       const strutturaId = req.body.struttura_id;
       if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
@@ -100,7 +104,7 @@ app.post('/api/proxy', async (req, res) => {
       return res.json([intestazione, ...righe]);
     }
 
-    // Modifica Prenotazione
+    // ✅ Modifica prenotazione
     if (azione === 'modificaPrenotazione') {
       const { id, nuovaData, nuovoOrario } = req.body;
       if (!id || !nuovaData || !nuovoOrario) {
@@ -149,17 +153,14 @@ app.post('/api/proxy', async (req, res) => {
       return res.json({ success: true });
     }
 
-    // Azione sconosciuta
     return res.status(400).json({ errore: "Azione non riconosciuta" });
-
   } catch (error) {
     console.error("❌ Errore nel backend:", error.message);
     return res.status(500).json({ errore: error.message });
   }
 });
 
-// ✅ Avvio del server
-console.log("📢 Porta usata:", process.env.PORT);
-app.listen(PORT, '0.0.0.0', () => {
+// ✅ Avvio server
+app.listen(PORT, () => {
   console.log(`✅ Server avviato sulla porta ${PORT}`);
 });
