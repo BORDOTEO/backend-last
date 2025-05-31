@@ -1,27 +1,24 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ CORS completo: solo Netlify, gestisce anche preflight
+// ✅ Middleware CORS universale (funziona su Render per Netlify)
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://sportivanet2.netlify.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, x-api-token");
-  if (req.method === "OPTIONS") {
+  res.setHeader('Access-Control-Allow-Origin', 'https://sportivanet2.netlify.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-token');
+  if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
   }
   next();
 });
 
-
-// Usa qui i tuoi dati Supabase
+// Supabase setup
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnJtbnRtc2NobXFybWh2b3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDM4OTcsImV4cCI6MjA2MzkxOTg5N30.DOpPC7YZOIbgEXktSvH6Sxg_Zfw_x7-5TNdO680qZ-o';
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const API_TOKEN = 'supersegreto123';
@@ -29,16 +26,7 @@ const API_TOKEN = 'supersegreto123';
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.options('/api/proxy', (req, res) => {
-  res.set({
-    'Access-Control-Allow-Origin': 'https://sportivanet2.netlify.app',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-api-token'
-  });
-  res.sendStatus(204);
-});
-
-
+// ✅ Route principale
 app.post('/api/proxy', async (req, res) => {
   const { azione } = req.body;
   const token = req.headers['x-api-token'];
@@ -48,8 +36,8 @@ app.post('/api/proxy', async (req, res) => {
   }
 
   try {
+    // Get Gettone
     if (azione === 'getGettone') {
-      // Recupera gettone dalla prima struttura
       const { data, error } = await supabase
         .from('strutture')
         .select('gettone')
@@ -57,129 +45,120 @@ app.post('/api/proxy', async (req, res) => {
         .single();
 
       if (error) throw error;
-
       return res.json({ gettone: data.gettone });
     }
 
+    // Mostra Tabella Ingressi
     if (azione === 'mostraTabella') {
-    const strutturaId = req.body.struttura_id;
-    if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
+      const strutturaId = req.body.struttura_id;
+      if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
 
-    const { data, error } = await supabase
-      .from('ingressi')
-      .select('entrata_il, nome, cognome, nome_struttura')
-      .eq('struttura_id', strutturaId)
-      .order('entrata_il', { ascending: false });
-
+      const { data, error } = await supabase
+        .from('ingressi')
+        .select('entrata_il, nome, cognome, nome_struttura')
+        .eq('struttura_id', strutturaId)
+        .order('entrata_il', { ascending: false });
 
       if (error) throw error;
 
-      // Prepara array con intestazione + dati
       const intestazione = ["Data e ora", "Nome", "Cognome", "Struttura"];
       const righe = data.map(r => [
         r.entrata_il,
         r.nome,
         r.cognome,
-        r.nome_struttura,
+        r.nome_struttura
       ]);
 
       return res.json([intestazione, ...righe]);
     }
 
+    // Mostra Prenotazioni
     if (azione === 'mostraPrenotazioni') {
-    const strutturaId = req.body.struttura_id;
-    if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
+      const strutturaId = req.body.struttura_id;
+      if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
 
-    const { data, error } = await supabase
-      .from('prenotazioni')
-      .select('registrato_il, data_prenotata, orario, nome, cognome, nome_struttura, id')
-      .eq('struttura_id', strutturaId)
-      .order('data_prenotata', { ascending: true })
-      .order('orario', { ascending: true });  // ✅ Nuovo ordinamento combinato
+      const { data, error } = await supabase
+        .from('prenotazioni')
+        .select('registrato_il, data_prenotata, orario, nome, cognome, nome_struttura, id')
+        .eq('struttura_id', strutturaId)
+        .order('data_prenotata', { ascending: true })
+        .order('orario', { ascending: true });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const intestazione = ["Registrata il", "Data prenotata", "Ora", "Nome", "Cognome", "Struttura", "ID"];
-    const righe = data.map(r => [
-      r.registrato_il,
-      r.data_prenotata,
-      r.orario,
-      r.nome,
-      r.cognome,
-      r.nome_struttura,
-      r.id
-    ]);
+      const intestazione = ["Registrata il", "Data prenotata", "Ora", "Nome", "Cognome", "Struttura", "ID"];
+      const righe = data.map(r => [
+        r.registrato_il,
+        r.data_prenotata,
+        r.orario,
+        r.nome,
+        r.cognome,
+        r.nome_struttura,
+        r.id
+      ]);
 
-    return res.json([intestazione, ...righe]);
-  }
+      return res.json([intestazione, ...righe]);
+    }
 
+    // Modifica Prenotazione
+    if (azione === 'modificaPrenotazione') {
+      const { id, nuovaData, nuovoOrario } = req.body;
+      if (!id || !nuovaData || !nuovoOrario) {
+        return res.status(400).json({ errore: "Dati incompleti per la modifica" });
+      }
 
-  if (azione === 'modificaPrenotazione') {
-const { id, nuovaData, nuovoOrario } = req.body;
+      const { data: prenotazioneCorrente, error: errRec } = await supabase
+        .from('prenotazioni')
+        .select('utente_id')
+        .eq('id', id)
+        .single();
 
-if (!id || !nuovaData || !nuovoOrario) {
-  return res.status(400).json({ errore: "Dati incompleti per la modifica" });
-}
+      if (errRec || !prenotazioneCorrente) {
+        return res.status(500).json({ errore: "Errore nel recupero della prenotazione" });
+      }
 
-// 🔍 Recupera utente_id della prenotazione corrente
-const { data: prenotazioneCorrente, error: errRec } = await supabase
-  .from('prenotazioni')
-  .select('utente_id')
-  .eq('id', id)
-  .single();
+      const utenteId = prenotazioneCorrente.utente_id;
 
-if (errRec || !prenotazioneCorrente) {
-  return res.status(500).json({ errore: "Errore nel recupero della prenotazione" });
-}
+      const { data: duplicati, error: errCheck } = await supabase
+        .from('prenotazioni')
+        .select('id')
+        .eq('utente_id', utenteId)
+        .eq('data_prenotata', nuovaData)
+        .neq('id', id);
 
-const utenteId = prenotazioneCorrente.utente_id;
+      if (errCheck) {
+        return res.status(500).json({ errore: "Errore durante il controllo prenotazioni" });
+      }
 
-// ❌ Controlla se esiste già un'altra prenotazione per la stessa data
-const { data: duplicati, error: errCheck } = await supabase
-  .from('prenotazioni')
-  .select('id')
-  .eq('utente_id', utenteId)
-  .eq('data_prenotata', nuovaData)
-  .neq('id', id);  // esclude la prenotazione corrente
+      if (duplicati.length > 0) {
+        return res.status(400).json({ errore: "Hai già una prenotazione per questa giornata." });
+      }
 
-if (errCheck) {
-  return res.status(500).json({ errore: "Errore durante il controllo prenotazioni" });
-}
+      const { error } = await supabase
+        .from('prenotazioni')
+        .update({
+          data_prenotata: nuovaData,
+          orario: nuovoOrario
+        })
+        .eq('id', id);
 
-if (duplicati.length > 0) {
-  return res.status(400).json({ errore: "Hai già una prenotazione per questa giornata." });
-}
+      if (error) {
+        return res.status(500).json({ errore: "Errore durante l'aggiornamento" });
+      }
 
-// ✅ Procedi con la modifica
-const { error } = await supabase
-  .from('prenotazioni')
-  .update({
-    data_prenotata: nuovaData,
-    orario: nuovoOrario
-  })
-  .eq('id', id);
+      return res.json({ success: true });
+    }
 
-if (error) {
-  console.error("Errore Supabase:", error);
-  return res.status(500).json({ errore: "Errore durante l'aggiornamento" });
-}
-
-return res.json({ success: true });
-}
-
-
-
-
-    // Se l’azione non è riconosciuta
+    // Azione sconosciuta
     return res.status(400).json({ errore: "Azione non riconosciuta" });
 
   } catch (error) {
-    console.error(error);
+    console.error("❌ Errore nel backend:", error.message);
     return res.status(500).json({ errore: error.message });
   }
 });
 
+// ✅ Avvio del server
 app.listen(PORT, () => {
-  console.log(`Server avviato su http://localhost:${PORT}`);
-
+  console.log(`✅ Server avviato sulla porta ${PORT}`);
 });
