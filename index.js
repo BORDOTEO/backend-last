@@ -159,6 +159,7 @@ app.post('/api/proxy', async (req, res) => {
 });
 
 // ✅ Avvio del server
-app.listen(PORT, () => {
+console.log("📢 Porta usata:", process.env.PORT);
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server avviato sulla porta ${PORT}`);
 });
