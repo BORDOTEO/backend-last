@@ -1,4 +1,5 @@
 console.log("🔥 INDEX.js aggiornato correttamente 🔥");
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -7,46 +8,25 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ✅ Header manuali per CORS (tutte le richieste)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://sportivanet2.netlify.app");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, x-api-token");
-  next();
-});
-
-// ✅ CORS configurato correttamente per Netlify
+// ✅ CORS semplificato e centralizzato
 app.use(cors({
   origin: 'https://sportivanet2.netlify.app',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-api-token']
 }));
 
-// ✅ Gestione completa della richiesta preflight OPTIONS
-app.options('*', cors({
-  origin: 'https://sportivanet2.netlify.app',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-api-token']
-}));
+// ✅ Middleware base
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// ✅ Middleware per OPTIONS esplicito per sicurezza
-app.options('/api/proxy', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://sportivanet2.netlify.app');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-token');
-  return res.sendStatus(204);
-});
-
-// Supabase config
+// ✅ Supabase config
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnJtbnRtc2NobXFybWh2b3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDM4OTcsImV4cCI6MjA2MzkxOTg5N30.DOpPC7YZOIbgEXktSvH6Sxg_Zfw_x7-5TNdO680qZ-o';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API_TOKEN = 'supersegreto123';
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
+// ✅ Rotta API
 app.post('/api/proxy', async (req, res) => {
   const { azione } = req.body;
   const token = req.headers['x-api-token'];
@@ -56,19 +36,16 @@ app.post('/api/proxy', async (req, res) => {
   }
 
   try {
-    // ✅ Recupera il gettone
     if (azione === 'getGettone') {
       const { data, error } = await supabase
         .from('strutture')
         .select('gettone')
         .limit(1)
         .single();
-
       if (error) throw error;
       return res.json({ gettone: data.gettone });
     }
 
-    // ✅ Mostra tabella ingressi
     if (azione === 'mostraTabella') {
       const strutturaId = req.body.struttura_id;
       if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
@@ -92,7 +69,6 @@ app.post('/api/proxy', async (req, res) => {
       return res.json([intestazione, ...righe]);
     }
 
-    // ✅ Mostra prenotazioni
     if (azione === 'mostraPrenotazioni') {
       const strutturaId = req.body.struttura_id;
       if (!strutturaId) return res.status(400).json({ errore: "struttura_id mancante" });
@@ -120,7 +96,6 @@ app.post('/api/proxy', async (req, res) => {
       return res.json([intestazione, ...righe]);
     }
 
-    // ✅ Modifica prenotazione
     if (azione === 'modificaPrenotazione') {
       const { id, nuovaData, nuovoOrario } = req.body;
       if (!id || !nuovaData || !nuovoOrario) {
@@ -176,7 +151,7 @@ app.post('/api/proxy', async (req, res) => {
   }
 });
 
-// ✅ Avvio server
-app.listen(PORT, () => {
+// ✅ Avvio server compatibile con Render
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server avviato sulla porta ${PORT}`);
 });
