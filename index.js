@@ -7,14 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ✅ CORS completo: solo Netlify, gestisce anche preflight
-app.use(cors({
-  origin: 'https://sportivanet2.netlify.app',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-api-token']
-}));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://sportivanet2.netlify.app");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, x-api-token");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
-// ✅ Gestione preflight automatica
-app.options('*', cors());
 
 // Usa qui i tuoi dati Supabase
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
