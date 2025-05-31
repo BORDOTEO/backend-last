@@ -18,7 +18,7 @@ app.options('*', cors());
 
 // Usa qui i tuoi dati Supabase
 const SUPABASE_URL = 'https://cmnrmntmschmqrmhvouw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnJtbnRtc2NobXFybWh2b3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDM4OTcsImV4cCI6MjA2MzkxOTg5N30.DOpPC7YZOIbgEXktSvH6Sxg_Zfw_x7-5TNdO680qZ-o';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
